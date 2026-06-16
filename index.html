@@ -212,24 +212,25 @@ function fmtPct(n) {
 
 function groupByMonth(rows, col) {
   const map = {};
-  const order = [];
   rows.forEach(r => {
     const raw = (r['Data'] || r['data'] || '').trim();
     if (!raw) return;
     let key = '';
-    const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
-    if (m) {
-      const y = m[3].length === 2 ? '20' + m[3] : m[3];
-      const mo = m[2].padStart(2,'0');
-      key = y + '-' + mo;
+    // DD/MM/YYYY ou DD-MM-YYYY
+    const brDate = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (brDate) {
+      const dia = brDate[1], mes = brDate[2].padStart(2,'0'), ano = brDate[3];
+      key = ano + '-' + mes;
     } else {
-      key = raw.slice(0,7);
+      // YYYY-MM-DD
+      const isoDate = raw.match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/);
+      if (isoDate) key = isoDate[1] + '-' + isoDate[2];
+      else key = raw.slice(0,7);
     }
-    if (!map[key]) { map[key] = 0; order.push(key); }
-    map[key] += parseNum(r[col]);
+    if (!key) return;
+    map[key] = (map[key] || 0) + parseNum(r[col]);
   });
-  const sorted = [...new Set(order)].sort();
-  return sorted.map(k => [k, map[k]]);
+  return Object.keys(map).sort().map(k => [k, map[k]]);
 }
 
 function monthLabel(k) {
