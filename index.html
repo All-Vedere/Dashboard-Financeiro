@@ -456,7 +456,6 @@ function renderCustos() {
   const totOper    = oper.reduce((s,r)    => s + parseNum(r['Valor']), 0);
   const totGeral   = totCompras + totOper;
 
-  // Agrupamentos mensais
   const comprasMes = groupByMonthCol(compras, 'Valor NFe');
   const operMes    = groupByMonthCol(oper, 'Valor');
 
@@ -468,125 +467,144 @@ function renderCustos() {
   });
   const classeEntries = Object.entries(byClasse).sort((a,b) => b[1]-a[1]);
 
-  // Pizza divisão total
-  const totalPizza = [
-    { label: 'Compra de Produtos', value: totCompras },
-    { label: 'Custos Operacionais', value: totOper }
-  ];
-
   const allM = [...new Set([...comprasMes.map(p=>p[0]), ...operMes.map(p=>p[0])])].sort();
   const cmMap = Object.fromEntries(comprasMes);
   const omMap = Object.fromEntries(operMes);
 
-  destroyChart('cbar'); destroyChart('cline'); destroyChart('oline');
-  destroyChart('pizza-classe'); destroyChart('pizza-total');
+  ['cbar','cline','oline','pizza-classe'].forEach(id => destroyChart(id));
 
-  const PAL_PIZZA = ['#D85A30','#BA7517','#3266ad','#1D9E75','#7F77DD','#b8952a','#888780','#5DCAA5'];
+  const PAL_PIZZA = ['#D85A30','#BA7517','#3266ad','#1D9E75','#7F77DD','#b8952a','#888780'];
 
   document.getElementById('custos-main').innerHTML = `
-    <!-- KPIs -->
-    <div class="kpi-row">
-      <div class="kpi-box">
-        <div class="kpi-box-label">Despesa Total</div>
-        <div class="kpi-box-value neg">${fmtBRL(totGeral)}</div>
-      </div>
-      <div class="kpi-box">
-        <div class="kpi-box-label">Compra de Produtos</div>
-        <div class="kpi-box-value" style="color:#D85A30">${fmtBRL(totCompras)}</div>
-      </div>
-      <div class="kpi-box">
-        <div class="kpi-box-label">Custos Operacionais</div>
-        <div class="kpi-box-value" style="color:#BA7517">${fmtBRL(totOper)}</div>
-      </div>
-      <div class="kpi-box">
-        <div class="kpi-box-label">% Compras / Total</div>
-        <div class="kpi-box-value">${totGeral ? ((totCompras/totGeral)*100).toFixed(1)+'%' : '—'}</div>
-      </div>
-      <div class="kpi-box">
-        <div class="kpi-box-label">% Operacional / Total</div>
-        <div class="kpi-box-value">${totGeral ? ((totOper/totGeral)*100).toFixed(1)+'%' : '—'}</div>
-      </div>
-    </div>
+    <!-- 3 cards lado a lado igual Receitas -->
+    <div class="top-grid">
 
-    <!-- Gráfico evolução mensal -->
-    <div class="card" style="margin-bottom:1rem">
-      <div class="card-title">Evolução de Custos</div>
-      <div class="card-sub">Compras vs Operacional por mês</div>
-      <div class="chart-wrap" style="height:240px">
-        <canvas id="ch-cbar" role="img" aria-label="Custos mensais">.</canvas>
-      </div>
-    </div>
-
-    <!-- Gráficos de linha individuais -->
-    <div class="custos-grid">
-      <div class="card">
+      <!-- Card Compra de Produtos -->
+      <div class="card" id="card-compras">
         <div class="card-title" style="color:#D85A30">Compra de Produtos</div>
-        <div class="card-sub">Evolução mensal · <strong style="color:#D85A30">${fmtBRL(totCompras)}</strong></div>
-        <div class="chart-wrap" style="height:190px">
+        <div class="card-sub">Aquisição de Estoque</div>
+        <div class="metrics-row">
+          <div>
+            <div class="metric-label">Total</div>
+            <div class="metric-value" style="color:#D85A30">${fmtBRL(totCompras)}</div>
+          </div>
+          <div>
+            <div class="metric-label">Notas Fiscais</div>
+            <div class="metric-value">${compras.length}</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:170px">
           <canvas id="ch-cline" role="img" aria-label="Compras mensais">.</canvas>
         </div>
       </div>
-      <div class="card">
+
+      <!-- Card Custos Operacionais -->
+      <div class="card" id="card-oper">
         <div class="card-title" style="color:#BA7517">Custos Operacionais</div>
-        <div class="card-sub">Evolução mensal · <strong style="color:#BA7517">${fmtBRL(totOper)}</strong></div>
-        <div class="chart-wrap" style="height:190px">
+        <div class="card-sub">Despesas de Operação</div>
+        <div class="metrics-row">
+          <div>
+            <div class="metric-label">Total</div>
+            <div class="metric-value" style="color:#BA7517">${fmtBRL(totOper)}</div>
+          </div>
+          <div>
+            <div class="metric-label">Lançamentos</div>
+            <div class="metric-value">${oper.length}</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:170px">
           <canvas id="ch-oline" role="img" aria-label="Operacional mensal">.</canvas>
         </div>
       </div>
+
+      <!-- Card Despesa Total -->
+      <div class="card" id="card-total">
+        <div class="card-title" style="color:#c0392b">Despesa Total</div>
+        <div class="card-sub">Compras + Operacional</div>
+        <div class="metrics-row">
+          <div>
+            <div class="metric-label">Total Geral</div>
+            <div class="metric-value" style="color:#c0392b">${fmtBRL(totGeral)}</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:170px">
+          <canvas id="ch-cbar" role="img" aria-label="Evolução custos totais">.</canvas>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Pizzas -->
-    <div class="custos-grid">
-      <div class="card">
-        <div class="card-title">Operacional por Classe</div>
-        <div class="card-sub">Distribuição das categorias</div>
-        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
-          <div class="chart-wrap" style="height:200px;flex:0 0 200px;max-width:200px">
+    <!-- Pizza row -->
+    <div class="gauge-grid">
+
+      <!-- Pizza Operacional por Classe -->
+      <div class="gauge-card" style="align-items:flex-start;text-align:left">
+        <div class="card-title" style="margin-bottom:2px">Operacional por Classe</div>
+        <div class="card-sub" style="margin-bottom:.75rem">Distribuição das categorias</div>
+        <div style="display:flex;align-items:center;gap:1.25rem;width:100%;flex-wrap:wrap">
+          <div style="height:160px;width:160px;flex-shrink:0;position:relative">
             <canvas id="ch-pizza-classe" role="img" aria-label="Pizza operacional por classe">.</canvas>
           </div>
-          <div id="leg-classe" style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2);flex:1;min-width:120px"></div>
+          <div id="leg-classe" style="display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--text2);flex:1;min-width:100px"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">Divisão dos Custos Totais</div>
-        <div class="card-sub">Compras vs Operacional</div>
-        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
-          <div class="chart-wrap" style="height:200px;flex:0 0 200px;max-width:200px">
+
+      <!-- Pizza Divisão Total -->
+      <div class="gauge-card" style="align-items:flex-start;text-align:left">
+        <div class="card-title" style="margin-bottom:2px">Divisão dos Custos</div>
+        <div class="card-sub" style="margin-bottom:.75rem">Compras vs Operacional</div>
+        <div style="display:flex;align-items:center;gap:1.25rem;width:100%;flex-wrap:wrap">
+          <div style="height:160px;width:160px;flex-shrink:0;position:relative">
             <canvas id="ch-pizza-total" role="img" aria-label="Pizza divisão total">.</canvas>
           </div>
-          <div id="leg-total" style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2);flex:1;min-width:120px"></div>
+          <div id="leg-total" style="display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--text2);flex:1;min-width:100px"></div>
         </div>
       </div>
+
+      <!-- KPIs percentuais -->
+      <div class="gauge-card">
+        <div class="gauge-label">% Compras / Total</div>
+        <div style="font-size:36px;font-weight:700;color:#D85A30;margin:.5rem 0">${totGeral ? ((totCompras/totGeral)*100).toFixed(1)+'%' : '—'}</div>
+        <div class="gauge-desc" style="margin-bottom:1.25rem">Custo de estoque sobre total</div>
+        <div class="gauge-label">% Operacional / Total</div>
+        <div style="font-size:36px;font-weight:700;color:#BA7517;margin:.5rem 0">${totGeral ? ((totOper/totGeral)*100).toFixed(1)+'%' : '—'}</div>
+        <div class="gauge-desc">Despesas operacionais sobre total</div>
+      </div>
+
     </div>
   `;
 
-  // Gráfico barras empilhadas
+  // Linha Compras
+  charts.cline = mkLine('ch-cline', comprasMes, 'Compra de Produtos', '#D85A30');
+
+  // Linha Operacional
+  charts.oline = mkLine('ch-oline', operMes, 'Custos Operacionais', '#BA7517');
+
+  // Barras empilhadas — Despesa Total
   charts.cbar = new Chart(document.getElementById('ch-cbar').getContext('2d'), {
     type: 'bar',
     data: {
       labels: allM.map(monthLabel),
       datasets: [
-        { label:'Compra de Produtos', data: allM.map(m=>Math.round(cmMap[m]||0)), backgroundColor:'#D85A30cc', borderRadius:3 },
-        { label:'Operacional',        data: allM.map(m=>Math.round(omMap[m]||0)), backgroundColor:'#BA7517cc', borderRadius:3 }
+        { label:'Compras',      data: allM.map(m=>Math.round(cmMap[m]||0)), backgroundColor:'#D85A30bb', borderRadius:3 },
+        { label:'Operacional',  data: allM.map(m=>Math.round(omMap[m]||0)), backgroundColor:'#BA7517bb', borderRadius:3 }
       ]
     },
     options: { responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:true, labels:{ color:'#6b6b67', font:{size:11}, boxWidth:10 } } },
-      scales:{ x:{ stacked:true, ticks:{ font:{size:10}, color:'#9c9990' } },
-               y:{ stacked:true, ticks:{ callback:v=>'R$'+fmtShort(v), font:{size:10}, color:'#9c9990' }, grid:{color:'rgba(0,0,0,0.05)'} } } }
+      plugins:{ legend:{ display:true, labels:{ color:'#6b6b67', font:{size:10}, boxWidth:8 } } },
+      scales:{
+        x:{ stacked:true, ticks:{ font:{size:9}, color:'#9c9990', maxRotation:45 } },
+        y:{ stacked:true, ticks:{ callback:v=>'R$'+fmtShort(v), font:{size:9}, color:'#9c9990' }, grid:{color:'rgba(0,0,0,0.05)'} }
+      }
+    }
   });
 
-  // Linhas individuais
-  charts.cline = mkLine('ch-cline', comprasMes, 'Compras', '#D85A30');
-  charts.oline = mkLine('ch-oline', operMes, 'Operacional', '#BA7517');
-
-  // Pizza — Operacional por Classe
-  const legClasse = document.getElementById('leg-classe');
-  legClasse.innerHTML = classeEntries.map((e,i) =>
+  // Pizza Operacional por Classe
+  document.getElementById('leg-classe').innerHTML = classeEntries.map((e,i) =>
     `<div style="display:flex;align-items:center;gap:6px">
-      <span style="width:10px;height:10px;border-radius:2px;background:${PAL_PIZZA[i%PAL_PIZZA.length]};flex-shrink:0;display:inline-block"></span>
-      <span>${e[0]}</span>
-      <span style="margin-left:auto;font-weight:600;color:var(--text)">${fmtBRL(e[1])}</span>
+      <span style="width:9px;height:9px;border-radius:2px;background:${PAL_PIZZA[i%PAL_PIZZA.length]};flex-shrink:0;display:inline-block"></span>
+      <span style="flex:1">${e[0]}</span>
+      <span style="font-weight:600;color:var(--text)">${fmtBRL(e[1])}</span>
     </div>`
   ).join('');
 
@@ -595,19 +613,26 @@ function renderCustos() {
     data: {
       labels: classeEntries.map(e=>e[0]),
       datasets:[{ data: classeEntries.map(e=>Math.round(e[1])),
-        backgroundColor: classeEntries.map((_,i)=>PAL_PIZZA[i%PAL_PIZZA.length]), borderWidth:2, borderColor:'#fff' }]
+        backgroundColor: classeEntries.map((_,i)=>PAL_PIZZA[i%PAL_PIZZA.length]),
+        borderWidth:2, borderColor:'#fff' }]
     },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${fmtBRL(ctx.raw)}` } } } }
+      cutout:'60%',
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${fmtBRL(ctx.raw)}` } } }
+    }
   });
 
-  // Pizza — Divisão total
+  // Pizza Divisão Total
   const palTotal = ['#D85A30','#BA7517'];
+  const totalPizza = [
+    { label:'Compra de Produtos', value: totCompras },
+    { label:'Custos Operacionais', value: totOper }
+  ];
   document.getElementById('leg-total').innerHTML = totalPizza.map((e,i) =>
     `<div style="display:flex;align-items:center;gap:6px">
-      <span style="width:10px;height:10px;border-radius:2px;background:${palTotal[i]};flex-shrink:0;display:inline-block"></span>
-      <span>${e.label}</span>
-      <span style="margin-left:auto;font-weight:600;color:var(--text)">${fmtBRL(e.value)}</span>
+      <span style="width:9px;height:9px;border-radius:2px;background:${palTotal[i]};flex-shrink:0;display:inline-block"></span>
+      <span style="flex:1">${e.label}</span>
+      <span style="font-weight:600;color:var(--text)">${fmtBRL(e.value)}</span>
     </div>`
   ).join('');
 
@@ -619,7 +644,9 @@ function renderCustos() {
         backgroundColor: palTotal, borderWidth:2, borderColor:'#fff' }]
     },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${fmtBRL(ctx.raw)}` } } } }
+      cutout:'60%',
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${fmtBRL(ctx.raw)}` } } }
+    }
   });
 }
 
