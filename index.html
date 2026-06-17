@@ -376,11 +376,12 @@ function renderReceitas() {
   const fatTotal    = vendas.reduce((s,r)   => s + parseNum(r['Faturamento Bruto']), 0);
   const lucroTotal  = vendas.reduce((s,r)   => s + parseNum(r['Lucro Líq.']), 0);
   const entradasTot = entradas.reduce((s,r) => s + parseNum(r['Valor']), 0);
-  const custoTotal  = (vcCompras ? compras.reduce((s,r) => s + parseNum(r[vcCompras]), 0) : 0)
-                    + (vcOper    ? oper.reduce((s,r)    => s + parseNum(r[vcOper]),    0) : 0);
+  const custoCompras = vcCompras ? compras.reduce((s,r) => s + parseNum(r[vcCompras]), 0) : 0;
+  const custoOper    = vcOper    ? oper.reduce((s,r)    => s + parseNum(r[vcOper]),    0) : 0;
+  const custoTotal   = custoCompras + custoOper;
 
-  const margem = fatTotal   ? (lucroTotal / fatTotal)   * 100 : 0;
-  const roi    = custoTotal ? (lucroTotal / custoTotal)  * 100 : 0;
+  const margem = fatTotal  ? (lucroTotal / fatTotal)  * 100 : 0;
+  const roi    = custoOper ? (lucroTotal / custoOper) * 100 : 0;
   const lpe    = entradasTot ? (lucroTotal / entradasTot) * 100 : 0;
 
   const fatMes  = groupByMonth(vendas,   'Faturamento Bruto');
@@ -434,10 +435,10 @@ function renderReceitas() {
     <div class="gauge-desc">Lucro Líq. / Faturamento Bruto</div>`;
 
   document.getElementById('gauge-roi').innerHTML = `
-    <div class="gauge-label">ROI</div>
+    <div class="gauge-label">ROI Operacional</div>
     ${gaugeHTML(roi, rc)}
     <div class="gauge-value ${roi>=0?'pos':'neg'}">${fmtPct(roi)}</div>
-    <div class="gauge-desc">Lucro Líq. / Custo Total</div>`;
+    <div class="gauge-desc">Lucro Líq. / Custos Operacionais</div>`;
 
   document.getElementById('gauge-lpe').innerHTML = `
     <div class="gauge-label">Lucro sobre Entradas</div>
