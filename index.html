@@ -345,7 +345,8 @@ function destroyChart(id) {
 
 /* ── Gauge SVG ── */
 function gaugeHTML(pct, color) {
-  const norm = Math.max(0, Math.min(1, (pct + 100) / 200));
+  // Escala: 0% a 30% → ponteiro de 0° a 180°
+  const norm = Math.max(0, Math.min(1, pct / 30));
   const angle = norm * 180;
   const rad = (angle - 90) * Math.PI / 180;
   const r = 52, cx = 75, cy = 68;
@@ -357,6 +358,9 @@ function gaugeHTML(pct, color) {
     <path d="M23,68 A52,52 0 ${large},1 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"/>
     <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="4" fill="#333"/>
+    <text x="23" y="76" font-size="8" fill="#9c9990" text-anchor="middle">0%</text>
+    <text x="75" y="14" font-size="8" fill="#9c9990" text-anchor="middle">15%</text>
+    <text x="127" y="76" font-size="8" fill="#9c9990" text-anchor="middle">30%</text>
   </svg>`;
 }
 
