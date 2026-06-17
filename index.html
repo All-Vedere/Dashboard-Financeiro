@@ -2,78 +2,129 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dashboard Financeiro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f0ede8;--surface:#ffffff;--surface2:#f7f5f2;
+  --bg:#f0ede8;--surface:#fff;--surface2:#f7f5f2;
   --text:#1a1a18;--text2:#6b6b67;--text3:#9c9990;
-  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
-  --gold:#b8952a;--blue:#3266ad;--teal:#1D9E75;--red:#c0392b;
-  --r:8px;--rl:12px;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.13);
+  --gold:#b8952a;--teal:#1D9E75;--red:#c0392b;--blue:#3266ad;
+  --r:10px;--rl:14px;
+  --sidebar-w:220px;
+  --bottomnav-h:64px;
 }
-html,body{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;font-size:14px}
-header{background:#1a1a18;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;height:54px;flex-shrink:0;position:sticky;top:0;z-index:20}
-.brand{display:flex;align-items:center;gap:10px}
-.brand-logo svg{width:26px;height:26px}
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100%;font-size:14px}
+
+/* ══ HEADER ══ */
+header{background:#1a1a18;padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0;position:sticky;top:0;z-index:30}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-logo svg{width:24px;height:24px}
 .brand-name{font-size:13px;font-weight:600;color:#e8e4de;letter-spacing:.04em}
-.header-right{display:flex;align-items:center;gap:10px}
-.status-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:#9c9990;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:20px;padding:4px 12px}
-.status-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:8px}
+.status-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:#9c9990;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.12);border-radius:20px;padding:4px 10px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;flex-shrink:0}
 .status-dot.error{background:#D85A30}
 .status-dot.loading{background:#b8952a;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.btn-refresh{display:flex;align-items:center;gap:6px;background:none;border:0.5px solid rgba(255,255,255,0.2);border-radius:var(--r);padding:5px 12px;font-size:12px;color:#9c9990;cursor:pointer;transition:background .15s}
+.btn-refresh{display:flex;align-items:center;gap:5px;background:none;border:0.5px solid rgba(255,255,255,0.18);border-radius:8px;padding:5px 11px;font-size:12px;color:#9c9990;cursor:pointer;transition:background .15s;white-space:nowrap}
 .btn-refresh:hover{background:rgba(255,255,255,0.08);color:#e8e4de}
 .btn-refresh svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
-.app-body{display:flex;flex:1;overflow:hidden}
-aside{width:210px;min-width:210px;background:#111110;display:flex;flex-direction:column;padding:1.25rem 0;border-right:1px solid rgba(255,255,255,0.05);overflow-y:auto;flex-shrink:0}
+
+/* ══ APP BODY ══ */
+.app-body{display:flex;flex:1;min-height:0;overflow:hidden}
+
+/* ══ SIDEBAR (desktop) ══ */
+aside{width:var(--sidebar-w);min-width:var(--sidebar-w);background:#111110;display:flex;flex-direction:column;padding:1.25rem 0;border-right:1px solid rgba(255,255,255,0.05);overflow-y:auto;flex-shrink:0}
 .sidebar-label{font-size:10px;font-weight:700;color:#3a3a37;letter-spacing:.12em;text-transform:uppercase;padding:0 1.25rem;margin:.25rem 0 .5rem}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;border-left:3px solid transparent;padding:10px 1.25rem;font-size:13px;font-weight:500;color:#5a5a56;cursor:pointer;transition:color .15s,background .15s,border-color .15s;text-align:left}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;border-left:3px solid transparent;padding:11px 1.25rem;font-size:13px;font-weight:500;color:#5a5a56;cursor:pointer;transition:color .15s,background .15s,border-color .15s;text-align:left}
 .nav-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
 .nav-btn:hover:not(.active){color:#b0ada8;background:rgba(255,255,255,0.03)}
 .nav-btn.active{color:#e8e4de;border-left-color:var(--gold);background:rgba(184,149,42,0.08)}
 .sidebar-divider{height:1px;background:rgba(255,255,255,0.05);margin:.75rem 1.25rem}
+
+/* ══ CONTENT ══ */
 .content{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0}
 .page{display:none}
 .page.active{display:block}
-.page-title-bar{background:var(--gold);padding:6px 2rem}
+.page-title-bar{background:var(--gold);padding:6px 1.5rem}
 .page-title-bar h1{font-size:14px;font-weight:700;color:#1a1a18;letter-spacing:.04em}
-main{padding:1.5rem 2rem}
-.top-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-.gauge-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-.custos-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.25rem}
-.card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rl);padding:1.25rem 1.5rem}
-.card-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px}
-.card-sub{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem}
-.metrics-row{display:flex;gap:2rem;margin-bottom:1rem;flex-wrap:wrap}
-.metric-label{font-size:11px;color:var(--text3);margin-bottom:3px}
-.metric-value{font-size:20px;font-weight:700;color:var(--text)}
+main{padding:1.25rem 1.5rem;max-width:1400px}
+
+/* ══ GRIDS ══ */
+.top-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}
+.gauge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}
+.custos-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+
+/* ══ CARDS ══ */
+.card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rl);padding:1.1rem 1.25rem}
+.card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.card-sub{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.65rem}
+.metrics-row{display:flex;gap:1.5rem;margin-bottom:.85rem;flex-wrap:wrap}
+.metric-label{font-size:11px;color:var(--text3);margin-bottom:2px}
+.metric-value{font-size:19px;font-weight:700;color:var(--text);line-height:1.2}
 .metric-value.gold{color:var(--gold)}
 .chart-wrap{position:relative;width:100%}
-.gauge-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rl);padding:1.25rem 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.gauge-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:.75rem}
-.gauge-value{font-size:28px;font-weight:700;margin-bottom:.25rem}
+.gauge-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rl);padding:1.1rem 1.25rem;display:flex;flex-direction:column;align-items:center;text-align:center}
+.gauge-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:.6rem}
+.gauge-value{font-size:24px;font-weight:700;margin-bottom:.2rem}
 .gauge-value.pos{color:var(--teal)}
 .gauge-value.neg{color:var(--red)}
 .gauge-desc{font-size:11px;color:var(--text3)}
-.kpi-box{background:var(--surface2);border-radius:var(--r);padding:1rem 1.25rem}
-.kpi-box-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
-.kpi-box-value{font-size:20px;font-weight:700;color:var(--text)}
+.kpi-box{background:var(--surface2);border-radius:var(--r);padding:.9rem 1.1rem}
+.kpi-box-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.kpi-box-value{font-size:18px;font-weight:700;color:var(--text)}
 .kpi-box-value.neg{color:var(--red)}
-.loading-msg{color:var(--text3);font-size:14px;padding:3rem;text-align:center}
-.error-msg{background:#fff0ee;color:#993C1D;border-radius:var(--r);padding:1.25rem;font-size:13px;line-height:1.7;margin-bottom:1rem}
-@media(max-width:800px){
-  aside{width:52px;min-width:52px}
-  .nav-btn span{display:none}
-  .sidebar-label,.sidebar-divider{display:none}
-  .nav-btn{padding:12px;justify-content:center}
-  .top-grid,.gauge-grid,.custos-grid{grid-template-columns:1fr}
+.loading-msg{color:var(--text3);font-size:14px;padding:2rem;text-align:center}
+.error-msg{background:#fff0ee;color:#993C1D;border-radius:var(--r);padding:1rem;font-size:13px;line-height:1.6;margin-bottom:1rem}
+
+/* ══ BOTTOM NAV (mobile) ══ */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bottomnav-h);background:#111110;border-top:1px solid rgba(255,255,255,0.08);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav-inner{display:flex;height:100%}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;cursor:pointer;color:#5a5a56;transition:color .15s;padding:0;-webkit-tap-highlight-color:transparent}
+.bnav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.bnav-btn span{font-size:11px;font-weight:500;letter-spacing:.02em}
+.bnav-btn.active{color:var(--gold)}
+.bnav-indicator{position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:2px;background:var(--gold);border-radius:0 0 2px 2px;opacity:0;transition:opacity .15s}
+.bnav-btn.active .bnav-indicator{opacity:1}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  /* Esconde sidebar, mostra bottomnav */
+  aside{display:none}
+  .bottom-nav{display:flex}
+  /* Padding para bottomnav */
+  .content{padding-bottom:var(--bottomnav-h)}
   main{padding:1rem}
+
+  /* Header compacto */
+  .status-badge{max-width:130px;font-size:10px}
+  .btn-refresh span{display:none}
+  .btn-refresh{padding:6px 8px}
+
+  /* Cards full-width */
+  .top-grid{grid-template-columns:1fr}
+  .gauge-grid{grid-template-columns:1fr 1fr}
+  .custos-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+
+  /* Métricas maiores no mobile */
+  .metric-value{font-size:22px}
+  .kpi-box-value{font-size:20px}
+  .card-title{font-size:16px}
+
+  /* Gauge lado a lado */
+  .gauge-card{padding:.9rem}
+  .gauge-value{font-size:20px}
+}
+
+@media(max-width:400px){
+  .gauge-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -96,12 +147,14 @@ main{padding:1.5rem 2rem}
     </div>
     <button class="btn-refresh" onclick="loadAllData()">
       <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      Atualizar
+      <span>Atualizar</span>
     </button>
   </div>
 </header>
 
 <div class="app-body">
+
+  <!-- Sidebar (desktop) -->
   <aside>
     <div class="sidebar-label">Menu</div>
     <button class="nav-btn active" onclick="switchPage('receitas',this)">
@@ -115,6 +168,7 @@ main{padding:1.5rem 2rem}
     <div class="sidebar-divider"></div>
   </aside>
 
+  <!-- Content -->
   <div class="content">
     <div id="page-receitas" class="page active">
       <div class="page-title-bar"><h1>Receitas</h1></div>
@@ -136,7 +190,24 @@ main{padding:1.5rem 2rem}
       <main id="custos-main"><div class="loading-msg">Carregando...</div></main>
     </div>
   </div>
+
 </div>
+
+<!-- Bottom Nav (mobile) -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnav-btn active" onclick="switchPageMobile('receitas',this)">
+      <div class="bnav-indicator"></div>
+      <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <span>Receitas</span>
+    </button>
+    <button class="bnav-btn" onclick="switchPageMobile('custos',this)">
+      <div class="bnav-indicator"></div>
+      <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+      <span>Custos</span>
+    </button>
+  </div>
+</nav>
 
 <script>
 /* ── URLs CSV públicas (sem CORS via fetch direto não funciona; usamos proxy via script tag + GViz) ── */
@@ -489,6 +560,34 @@ async function loadAllData() {
 
 loadAllData();
 setInterval(loadAllData, 60000);
+</script>
+
+<script>
+// Sobrescreve switchPage para sincronizar sidebar + bottomnav
+const _origSwitch = switchPage;
+function switchPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  // Sincroniza bottom nav
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  const bnavBtn = document.querySelector(`.bnav-btn[onclick*="${name}"]`);
+  if (bnavBtn) bnavBtn.classList.add('active');
+}
+
+function switchPageMobile(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  // Sincroniza sidebar
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const sideBtn = document.querySelector(`.nav-btn[onclick*="${name}"]`);
+  if (sideBtn) sideBtn.classList.add('active');
+  // Scroll to top
+  document.querySelector('.content').scrollTop = 0;
+}
 </script>
 </body>
 </html>
