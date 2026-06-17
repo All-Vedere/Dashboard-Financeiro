@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dashboard Financeiro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18,7 +18,7 @@
   --bottomnav-h:68px;
 }
 html,body{height:100%;-webkit-font-smoothing:antialiased}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100%;font-size:14px}
+body{font-family:"Montserrat",-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100%;font-size:14px}
 
 /* ══ HEADER ══ */
 header{background:#0f2344;padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0;position:sticky;top:0;z-index:30}
@@ -409,7 +409,7 @@ function renderReceitas() {
   destroyChart('lucro');
   const lc = lucroTotal >= 0 ? '#1D9E75' : '#c0392b';
   document.getElementById('card-lucro').innerHTML = `
-    <div class="card-title">Lucro</div>
+    <div class="card-title">Lucro Operacional</div>
     <div class="card-sub">Ganhos e Proventos</div>
     <div class="metrics-row">
       <div><div class="metric-label">Lucro Líquido Total</div><div class="metric-value" style="color:${lc}">${fmtBRL(lucroTotal)}</div></div>
