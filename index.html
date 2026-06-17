@@ -452,53 +452,115 @@ function renderCustos() {
   const compras = store.compras || [];
   const oper    = store.operacional || [];
 
-  function findCol(rows, hints) {
-    if (!rows.length) return null;
-    const cols = Object.keys(rows[0]);
-    return cols.find(c => hints.some(h => c.toLowerCase().includes(h))) || cols[1];
-  }
-  const vcC = findCol(compras, ['valor','total','custo']);
-  const vcO = findCol(oper,    ['valor','total','custo']);
+  const totCompras = compras.reduce((s,r) => s + parseNum(r['Valor NFe']), 0);
+  const totOper    = oper.reduce((s,r)    => s + parseNum(r['Valor']), 0);
+  const totGeral   = totCompras + totOper;
 
-  const totC = vcC ? compras.reduce((s,r) => s + parseNum(r[vcC]), 0) : 0;
-  const totO = vcO ? oper.reduce((s,r)    => s + parseNum(r[vcO]), 0) : 0;
-  const totG = totC + totO;
+  // Agrupamentos mensais
+  const comprasMes = groupByMonthCol(compras, 'Valor NFe');
+  const operMes    = groupByMonthCol(oper, 'Valor');
 
-  const cMes = groupByMonth(compras, vcC || 'Valor');
-  const oMes = groupByMonth(oper,    vcO || 'Valor');
+  // Pizza operacional por Classe
+  const byClasse = {};
+  oper.forEach(r => {
+    const cl = r['Classe'] || 'Outros';
+    byClasse[cl] = (byClasse[cl] || 0) + parseNum(r['Valor']);
+  });
+  const classeEntries = Object.entries(byClasse).sort((a,b) => b[1]-a[1]);
 
-  const allM = [...new Set([...cMes.map(p=>p[0]), ...oMes.map(p=>p[0])])].sort();
-  const cmMap = Object.fromEntries(cMes);
-  const omMap = Object.fromEntries(oMes);
+  // Pizza divisão total
+  const totalPizza = [
+    { label: 'Compra de Produtos', value: totCompras },
+    { label: 'Custos Operacionais', value: totOper }
+  ];
+
+  const allM = [...new Set([...comprasMes.map(p=>p[0]), ...operMes.map(p=>p[0])])].sort();
+  const cmMap = Object.fromEntries(comprasMes);
+  const omMap = Object.fromEntries(operMes);
 
   destroyChart('cbar'); destroyChart('cline'); destroyChart('oline');
+  destroyChart('pizza-classe'); destroyChart('pizza-total');
+
+  const PAL_PIZZA = ['#D85A30','#BA7517','#3266ad','#1D9E75','#7F77DD','#b8952a','#888780','#5DCAA5'];
 
   document.getElementById('custos-main').innerHTML = `
+    <!-- KPIs -->
     <div class="kpi-row">
-      <div class="kpi-box"><div class="kpi-box-label">Custo Total</div><div class="kpi-box-value neg">${fmtBRL(totG)}</div></div>
-      <div class="kpi-box"><div class="kpi-box-label">Compra de Produtos</div><div class="kpi-box-value">${fmtBRL(totC)}</div></div>
-      <div class="kpi-box"><div class="kpi-box-label">Operacional</div><div class="kpi-box-value">${fmtBRL(totO)}</div></div>
-      <div class="kpi-box"><div class="kpi-box-label">% Compras</div><div class="kpi-box-value">${totG?((totC/totG)*100).toFixed(1)+'%':'—'}</div></div>
-      <div class="kpi-box"><div class="kpi-box-label">% Operacional</div><div class="kpi-box-value">${totG?((totO/totG)*100).toFixed(1)+'%':'—'}</div></div>
+      <div class="kpi-box">
+        <div class="kpi-box-label">Despesa Total</div>
+        <div class="kpi-box-value neg">${fmtBRL(totGeral)}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-box-label">Compra de Produtos</div>
+        <div class="kpi-box-value" style="color:#D85A30">${fmtBRL(totCompras)}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-box-label">Custos Operacionais</div>
+        <div class="kpi-box-value" style="color:#BA7517">${fmtBRL(totOper)}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-box-label">% Compras / Total</div>
+        <div class="kpi-box-value">${totGeral ? ((totCompras/totGeral)*100).toFixed(1)+'%' : '—'}</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-box-label">% Operacional / Total</div>
+        <div class="kpi-box-value">${totGeral ? ((totOper/totGeral)*100).toFixed(1)+'%' : '—'}</div>
+      </div>
     </div>
-    <div class="card" style="margin-bottom:1.25rem">
+
+    <!-- Gráfico evolução mensal -->
+    <div class="card" style="margin-bottom:1rem">
       <div class="card-title">Evolução de Custos</div>
       <div class="card-sub">Compras vs Operacional por mês</div>
-      <div class="chart-wrap" style="height:250px"><canvas id="ch-cbar" role="img" aria-label="Custos mensais">.</canvas></div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="ch-cbar" role="img" aria-label="Custos mensais">.</canvas>
+      </div>
     </div>
+
+    <!-- Gráficos de linha individuais -->
     <div class="custos-grid">
       <div class="card">
-        <div class="card-title">Compra de Produtos</div>
-        <div class="card-sub">Evolução mensal</div>
-        <div class="chart-wrap" style="height:200px"><canvas id="ch-cline" role="img" aria-label="Compras mensais">.</canvas></div>
+        <div class="card-title" style="color:#D85A30">Compra de Produtos</div>
+        <div class="card-sub">Evolução mensal · <strong style="color:#D85A30">${fmtBRL(totCompras)}</strong></div>
+        <div class="chart-wrap" style="height:190px">
+          <canvas id="ch-cline" role="img" aria-label="Compras mensais">.</canvas>
+        </div>
       </div>
       <div class="card">
-        <div class="card-title">Custos Operacionais</div>
-        <div class="card-sub">Evolução mensal</div>
-        <div class="chart-wrap" style="height:200px"><canvas id="ch-oline" role="img" aria-label="Operacional mensal">.</canvas></div>
+        <div class="card-title" style="color:#BA7517">Custos Operacionais</div>
+        <div class="card-sub">Evolução mensal · <strong style="color:#BA7517">${fmtBRL(totOper)}</strong></div>
+        <div class="chart-wrap" style="height:190px">
+          <canvas id="ch-oline" role="img" aria-label="Operacional mensal">.</canvas>
+        </div>
       </div>
-    </div>`;
+    </div>
 
+    <!-- Pizzas -->
+    <div class="custos-grid">
+      <div class="card">
+        <div class="card-title">Operacional por Classe</div>
+        <div class="card-sub">Distribuição das categorias</div>
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+          <div class="chart-wrap" style="height:200px;flex:0 0 200px;max-width:200px">
+            <canvas id="ch-pizza-classe" role="img" aria-label="Pizza operacional por classe">.</canvas>
+          </div>
+          <div id="leg-classe" style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2);flex:1;min-width:120px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Divisão dos Custos Totais</div>
+        <div class="card-sub">Compras vs Operacional</div>
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+          <div class="chart-wrap" style="height:200px;flex:0 0 200px;max-width:200px">
+            <canvas id="ch-pizza-total" role="img" aria-label="Pizza divisão total">.</canvas>
+          </div>
+          <div id="leg-total" style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2);flex:1;min-width:120px"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Gráfico barras empilhadas
   charts.cbar = new Chart(document.getElementById('ch-cbar').getContext('2d'), {
     type: 'bar',
     data: {
@@ -514,8 +576,71 @@ function renderCustos() {
                y:{ stacked:true, ticks:{ callback:v=>'R$'+fmtShort(v), font:{size:10}, color:'#9c9990' }, grid:{color:'rgba(0,0,0,0.05)'} } } }
   });
 
-  charts.cline = mkLine('ch-cline', cMes, 'Compras', '#D85A30');
-  charts.oline = mkLine('ch-oline', oMes, 'Operacional', '#BA7517');
+  // Linhas individuais
+  charts.cline = mkLine('ch-cline', comprasMes, 'Compras', '#D85A30');
+  charts.oline = mkLine('ch-oline', operMes, 'Operacional', '#BA7517');
+
+  // Pizza — Operacional por Classe
+  const legClasse = document.getElementById('leg-classe');
+  legClasse.innerHTML = classeEntries.map((e,i) =>
+    `<div style="display:flex;align-items:center;gap:6px">
+      <span style="width:10px;height:10px;border-radius:2px;background:${PAL_PIZZA[i%PAL_PIZZA.length]};flex-shrink:0;display:inline-block"></span>
+      <span>${e[0]}</span>
+      <span style="margin-left:auto;font-weight:600;color:var(--text)">${fmtBRL(e[1])}</span>
+    </div>`
+  ).join('');
+
+  charts['pizza-classe'] = new Chart(document.getElementById('ch-pizza-classe').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: classeEntries.map(e=>e[0]),
+      datasets:[{ data: classeEntries.map(e=>Math.round(e[1])),
+        backgroundColor: classeEntries.map((_,i)=>PAL_PIZZA[i%PAL_PIZZA.length]), borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${fmtBRL(ctx.raw)}` } } } }
+  });
+
+  // Pizza — Divisão total
+  const palTotal = ['#D85A30','#BA7517'];
+  document.getElementById('leg-total').innerHTML = totalPizza.map((e,i) =>
+    `<div style="display:flex;align-items:center;gap:6px">
+      <span style="width:10px;height:10px;border-radius:2px;background:${palTotal[i]};flex-shrink:0;display:inline-block"></span>
+      <span>${e.label}</span>
+      <span style="margin-left:auto;font-weight:600;color:var(--text)">${fmtBRL(e.value)}</span>
+    </div>`
+  ).join('');
+
+  charts['pizza-total'] = new Chart(document.getElementById('ch-pizza-total').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: totalPizza.map(e=>e.label),
+      datasets:[{ data: totalPizza.map(e=>Math.round(e.value)),
+        backgroundColor: palTotal, borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${fmtBRL(ctx.raw)}` } } } }
+  });
+}
+
+/* ── groupByMonth com coluna customizável ── */
+function groupByMonthCol(rows, col) {
+  const map = {};
+  rows.forEach(r => {
+    const raw = (r['Data'] || r['data'] || '').trim();
+    if (!raw) return;
+    let key = '';
+    const brDate = raw.match(/^(\d{1,2})[\\/\-](\d{1,2})[\\/\-](\d{4})$/);
+    if (brDate) key = brDate[3] + '-' + brDate[2].padStart(2,'0');
+    else {
+      const iso = raw.match(/^(\d{4})[\\/\-](\d{2})[\\/\-](\d{2})$/);
+      if (iso) key = iso[1] + '-' + iso[2];
+      else key = raw.slice(0,7);
+    }
+    if (!key) return;
+    map[key] = (map[key] || 0) + parseNum(r[col]);
+  });
+  return Object.keys(map).sort().map(k => [k, map[k]]);
 }
 
 /* ── Chart.js line helper ── */
