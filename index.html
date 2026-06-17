@@ -473,7 +473,7 @@ function renderCustos() {
 
   ['cbar','cline','oline','pizza-classe'].forEach(id => destroyChart(id));
 
-  const PAL_PIZZA = ['#D85A30','#BA7517','#3266ad','#1D9E75','#7F77DD','#b8952a','#888780'];
+  const PAL_PIZZA = ['#BA7517','#3266ad','#1D9E75','#7F77DD','#b8952a','#888780','#D85A30'];
 
   document.getElementById('custos-main').innerHTML = `
     <!-- 3 cards lado a lado igual Receitas -->
@@ -481,7 +481,7 @@ function renderCustos() {
 
       <!-- Card Compra de Produtos -->
       <div class="card" id="card-compras">
-        <div class="card-title" style="color:#D85A30">Compra de Produtos</div>
+        <div class="card-title" style="color:#7F77DD">Compra de Produtos</div>
         <div class="card-sub">Aquisição de Estoque</div>
         <div class="metrics-row">
           <div>
@@ -519,12 +519,12 @@ function renderCustos() {
 
       <!-- Card Despesa Total -->
       <div class="card" id="card-total">
-        <div class="card-title" style="color:#c0392b">Despesa Total</div>
+        <div class="card-title" style="color:#1D9E75">Despesa Total</div>
         <div class="card-sub">Compras + Operacional</div>
         <div class="metrics-row">
           <div>
             <div class="metric-label">Total Geral</div>
-            <div class="metric-value" style="color:#c0392b">${fmtBRL(totGeral)}</div>
+            <div class="metric-value" style="color:#1D9E75">${fmtBRL(totGeral)}</div>
           </div>
         </div>
         <div class="chart-wrap" style="height:170px">
@@ -564,7 +564,7 @@ function renderCustos() {
       <!-- KPIs percentuais -->
       <div class="gauge-card">
         <div class="gauge-label">% Compras / Total</div>
-        <div style="font-size:36px;font-weight:700;color:#D85A30;margin:.5rem 0">${totGeral ? ((totCompras/totGeral)*100).toFixed(1)+'%' : '—'}</div>
+        <div style="font-size:36px;font-weight:700;color:#7F77DD;margin:.5rem 0">${totGeral ? ((totCompras/totGeral)*100).toFixed(1)+'%' : '—'}</div>
         <div class="gauge-desc" style="margin-bottom:1.25rem">Custo de estoque sobre total</div>
         <div class="gauge-label">% Operacional / Total</div>
         <div style="font-size:36px;font-weight:700;color:#BA7517;margin:.5rem 0">${totGeral ? ((totOper/totGeral)*100).toFixed(1)+'%' : '—'}</div>
@@ -575,7 +575,7 @@ function renderCustos() {
   `;
 
   // Linha Compras
-  charts.cline = mkLine('ch-cline', comprasMes, 'Compra de Produtos', '#D85A30');
+  charts.cline = mkLine('ch-cline', comprasMes, 'Compra de Produtos', '#7F77DD');
 
   // Linha Operacional
   charts.oline = mkLine('ch-oline', operMes, 'Custos Operacionais', '#BA7517');
@@ -586,7 +586,7 @@ function renderCustos() {
     data: {
       labels: allM.map(monthLabel),
       datasets: [
-        { label:'Compras',      data: allM.map(m=>Math.round(cmMap[m]||0)), backgroundColor:'#D85A30bb', borderRadius:3 },
+        { label:'Compras',      data: allM.map(m=>Math.round(cmMap[m]||0)), backgroundColor:'#7F77DDbb', borderRadius:3 },
         { label:'Operacional',  data: allM.map(m=>Math.round(omMap[m]||0)), backgroundColor:'#BA7517bb', borderRadius:3 }
       ]
     },
@@ -623,7 +623,7 @@ function renderCustos() {
   });
 
   // Pizza Divisão Total
-  const palTotal = ['#D85A30','#BA7517'];
+  const palTotal = ['#7F77DD','#BA7517'];
   const totalPizza = [
     { label:'Compra de Produtos', value: totCompras },
     { label:'Custos Operacionais', value: totOper }
