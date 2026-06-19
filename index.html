@@ -350,34 +350,36 @@ function destroyChart(id) {
 
 /* ── Gauge SVG ── */
 function gaugeHTML(pct, color) {
-  // 0%=esquerda, 30%=direita, semicírculo horário
-  const norm = Math.max(0, Math.min(1, pct / 30));
+  const norm = Math.max(0, Math.min(0.9999, pct / 30));
   const r = 55, cx = 90, cy = 75;
-  const sx = cx - r; // 35  (ponto 0%)
-  const ex = cx + r; // 145 (ponto 30%)
+  const steps = 30;
 
-  // Ângulo do valor: PI (esq) → 0 (dir)
-  const ang = Math.PI - norm * Math.PI;
-  const nx = +(cx + r * Math.cos(ang)).toFixed(2);
-  const ny = +(cy - r * Math.sin(ang)).toFixed(2);
+  function ptX(n) { return +(cx + r * Math.cos(Math.PI * (1 - n))).toFixed(2); }
+  function ptY(n) { return +(cy - r * Math.sin(Math.PI * (1 - n))).toFixed(2); }
 
-  // Estratégia: se norm <= 0.5, large=0; se norm > 0.5, large=1
-  // Mas sempre sweep=1 (horário), partindo de sx,cy até nx,ny
-  const large = norm > 0.5 ? 1 : 0;
+  function polyline(n0, n1) {
+    let pts = '';
+    for (let i = 0; i <= steps; i++) {
+      const n = n0 + (n1 - n0) * i / steps;
+      pts += ptX(n) + ',' + ptY(n) + ' ';
+    }
+    return pts.trim();
+  }
 
-  // Arco restante (cinza): do ponto do valor até o fim (ex,cy)
-  // norm restante = 1 - norm
-  const remLarge = (1 - norm) > 0.5 ? 1 : 0;
+  const grayPts  = polyline(norm, 1);
+  const colorPts = polyline(0, norm);
+  const vx = ptX(norm), vy = ptY(norm);
+  const sx = ptX(0),    ex = ptX(1);
 
-  return `<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
-    <path d="M${nx},${ny} A${r},${r} 0 ${remLarge},1 ${ex},${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
-    <path d="M${sx},${cy} A${r},${r} 0 ${large},1 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
-    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="${cx}" cy="${cy}" r="4.5" fill="#1a1a18"/>
-    <text x="${sx}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>
-    <text x="${cx}" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>
-    <text x="${ex}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
-  </svg>`;
+  return '<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">'
+    + '<polyline points="' + grayPts  + '" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<polyline points="' + colorPts + '" fill="none" stroke="' + color + '" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<line x1="' + cx + '" y1="' + cy + '" x2="' + vx + '" y2="' + vy + '" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>'
+    + '<circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="#1a1a18"/>'
+    + '<text x="' + sx + '" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>'
+    + '<text x="' + cx + '" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>'
+    + '<text x="' + ex + '" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>'
+    + '</svg>';
 }
 
 /* ══════════════════════════════════════════
