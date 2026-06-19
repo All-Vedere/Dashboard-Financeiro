@@ -350,33 +350,24 @@ function destroyChart(id) {
 
 /* ── Gauge SVG ── */
 function gaugeHTML(pct, color) {
-  // Semicírculo: começa à esquerda (180°) e vai para direita (0°) no sentido anti-horário
   // 0% = esquerda, 15% = topo, 30% = direita
   const norm = Math.max(0, Math.min(1, pct / 30));
   const r = 55, cx = 90, cy = 75;
 
-  // Ângulo em radianos: começa em PI (esq) e vai até 0 (dir)
-  const startRad = Math.PI;
-  const endRad   = Math.PI - norm * Math.PI; // PI → 0
-
-  // Ponto final do arco colorido (= ponta do ponteiro)
+  // Ângulo: começa em PI (esquerda=0%) e vai diminuindo até 0 (direita=30%)
+  const endRad = Math.PI - norm * Math.PI;
   const nx = (cx + r * Math.cos(endRad)).toFixed(1);
   const ny = (cy - r * Math.sin(endRad)).toFixed(1);
 
-  // Ponto início: extremo esquerdo
-  const sx = (cx - r).toFixed(1); // 35
-  // Ponto fim do arco cinza: extremo direito
-  const ex = (cx + r).toFixed(1); // 145
-
-  // large-arc-flag: 1 se o arco colorido > 180° (nunca acontece aqui pois max é 180°)
-  // sweep-flag=0 pois vamos no sentido anti-horário (de PI para 0)
+  const sx = (cx - r).toFixed(1); // 35 — extremo esquerdo (0%)
+  const ex = (cx + r).toFixed(1); // 145 — extremo direito (30%)
   const large = norm > 0.5 ? 1 : 0;
 
   return `<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
-    <!-- Arco fundo (cinza): da esquerda para direita, sentido horário (sweep=1) -->
+    <!-- Arco fundo cinza: esquerda → direita, horário (sweep=1) -->
     <path d="M${sx},${cy} A${r},${r} 0 0,1 ${ex},${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
-    <!-- Arco colorido: da esquerda até posição do valor, sentido anti-horário (sweep=0) -->
-    <path d="M${ex},${cy} A${r},${r} 0 ${large},0 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
+    <!-- Arco colorido: esquerda → posição do valor, horário (sweep=1) -->
+    <path d="M${sx},${cy} A${r},${r} 0 ${large},1 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
     <!-- Ponteiro -->
     <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="4.5" fill="#1a1a18"/>
