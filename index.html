@@ -369,19 +369,15 @@ function gaugeHTML(pct, color) {
   // norm restante = 1 - norm
   const remLarge = (1 - norm) > 0.5 ? 1 : 0;
 
-  return \`<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
-    <!-- Arco cinza: do valor até direita -->
-    <path d="M\${nx},\${ny} A\${r},\${r} 0 \${remLarge},1 \${ex},\${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
-    <!-- Arco colorido: da esquerda até o valor -->
-    <path d="M\${sx},\${cy} A\${r},\${r} 0 \${large},1 \${nx},\${ny}" fill="none" stroke="\${color}" stroke-width="10" stroke-linecap="round"/>
-    <!-- Ponteiro -->
-    <line x1="\${cx}" y1="\${cy}" x2="\${nx}" y2="\${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="\${cx}" cy="\${cy}" r="4.5" fill="#1a1a18"/>
-    <!-- Labels -->
-    <text x="\${sx}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>
-    <text x="\${cx}" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>
-    <text x="\${ex}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
-  </svg>\`;
+  return `<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
+    <path d="M${nx},${ny} A${r},${r} 0 ${remLarge},1 ${ex},${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
+    <path d="M${sx},${cy} A${r},${r} 0 ${large},1 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="4.5" fill="#1a1a18"/>
+    <text x="${sx}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>
+    <text x="${cx}" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>
+    <text x="${ex}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
+  </svg>`;
 }
 
 /* ══════════════════════════════════════════
