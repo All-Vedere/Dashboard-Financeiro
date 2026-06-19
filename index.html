@@ -350,32 +350,38 @@ function destroyChart(id) {
 
 /* ── Gauge SVG ── */
 function gaugeHTML(pct, color) {
-  // 0% = esquerda, 15% = topo, 30% = direita
+  // 0%=esquerda, 30%=direita, semicírculo horário
   const norm = Math.max(0, Math.min(1, pct / 30));
   const r = 55, cx = 90, cy = 75;
+  const sx = cx - r; // 35  (ponto 0%)
+  const ex = cx + r; // 145 (ponto 30%)
 
-  // Ângulo: começa em PI (esquerda=0%) e vai diminuindo até 0 (direita=30%)
-  const endRad = Math.PI - norm * Math.PI;
-  const nx = (cx + r * Math.cos(endRad)).toFixed(1);
-  const ny = (cy - r * Math.sin(endRad)).toFixed(1);
+  // Ângulo do valor: PI (esq) → 0 (dir)
+  const ang = Math.PI - norm * Math.PI;
+  const nx = +(cx + r * Math.cos(ang)).toFixed(2);
+  const ny = +(cy - r * Math.sin(ang)).toFixed(2);
 
-  const sx = (cx - r).toFixed(1); // 35 — extremo esquerdo (0%)
-  const ex = (cx + r).toFixed(1); // 145 — extremo direito (30%)
+  // Estratégia: se norm <= 0.5, large=0; se norm > 0.5, large=1
+  // Mas sempre sweep=1 (horário), partindo de sx,cy até nx,ny
   const large = norm > 0.5 ? 1 : 0;
 
-  return `<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
-    <!-- Arco fundo cinza: esquerda → direita, horário (sweep=1) -->
-    <path d="M${sx},${cy} A${r},${r} 0 0,1 ${ex},${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
-    <!-- Arco colorido: esquerda → posição do valor, horário (sweep=1) -->
-    <path d="M${sx},${cy} A${r},${r} 0 ${large},1 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
+  // Arco restante (cinza): do ponto do valor até o fim (ex,cy)
+  // norm restante = 1 - norm
+  const remLarge = (1 - norm) > 0.5 ? 1 : 0;
+
+  return \`<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
+    <!-- Arco cinza: do valor até direita -->
+    <path d="M\${nx},\${ny} A\${r},\${r} 0 \${remLarge},1 \${ex},\${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
+    <!-- Arco colorido: da esquerda até o valor -->
+    <path d="M\${sx},\${cy} A\${r},\${r} 0 \${large},1 \${nx},\${ny}" fill="none" stroke="\${color}" stroke-width="10" stroke-linecap="round"/>
     <!-- Ponteiro -->
-    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="${cx}" cy="${cy}" r="4.5" fill="#1a1a18"/>
+    <line x1="\${cx}" y1="\${cy}" x2="\${nx}" y2="\${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="\${cx}" cy="\${cy}" r="4.5" fill="#1a1a18"/>
     <!-- Labels -->
-    <text x="${sx}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>
-    <text x="${cx}" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>
-    <text x="${ex}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
-  </svg>`;
+    <text x="\${sx}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>
+    <text x="\${cx}" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>
+    <text x="\${ex}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
+  </svg>\`;
 }
 
 /* ══════════════════════════════════════════
