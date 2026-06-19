@@ -350,25 +350,28 @@ function destroyChart(id) {
 
 /* ── Gauge SVG ── */
 function gaugeHTML(pct, color) {
-  // Escala 0–30%, ponteiro da esquerda para a direita
-  const norm = Math.max(0, Math.min(1, pct / 30));
-  const deg  = -180 + norm * 180; // -180° (esq) → 0° (dir)
-  const rad  = deg * Math.PI / 180;
-  // cx=90, cy=75, raio=55 — mesmo raio para arco e ponteiro
+  // Escala 0-30%: 0%=esquerda, 30%=direita
+  // Usamos ângulos em graus: 180° (esq) → 0° (dir), passando por 90° (topo)
+  const norm   = Math.max(0, Math.min(1, pct / 30));
+  const deg    = 180 - norm * 180;        // 180° → 0°
+  const rad    = deg * Math.PI / 180;
   const r = 55, cx = 90, cy = 75;
+  // Ponto do ponteiro
   const nx = (cx + r * Math.cos(rad)).toFixed(1);
-  const ny = (cy + r * Math.sin(rad)).toFixed(1);
-  // ponto inicial do arco (extremo esquerdo): cx-r, cy = 35, 75
-  const x0 = cx - r; // 35
+  const ny = (cy - r * Math.sin(rad)).toFixed(1);  // y invertido no SVG
+  // Ponto inicial (0%): ângulo 180° → (cx-r, cy)
+  const x0 = (cx - r).toFixed(1);  // 35
+  const x1 = (cx + r).toFixed(1);  // 145
+  // large-arc: 1 se norm > 0.5 (passou do topo)
   const large = norm > 0.5 ? 1 : 0;
   return `<svg viewBox="0 0 180 95" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto">
-    <path d="M${x0},${cy} A${r},${r} 0 0,1 ${cx+r},${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
+    <path d="M${x0},${cy} A${r},${r} 0 0,1 ${x1},${cy}" fill="none" stroke="#e8e4de" stroke-width="10" stroke-linecap="round"/>
     <path d="M${x0},${cy} A${r},${r} 0 ${large},1 ${nx},${ny}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
     <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="#1a1a18" stroke-width="2.5" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="4.5" fill="#1a1a18"/>
     <text x="${x0}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">0%</text>
     <text x="${cx}" y="14" font-size="9" fill="#9c9990" text-anchor="middle">15%</text>
-    <text x="${cx+r}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
+    <text x="${x1}" y="90" font-size="9" fill="#9c9990" text-anchor="middle">30%</text>
   </svg>`;
 }
 
